@@ -6,7 +6,6 @@
     <title>Тетрис для смартфона</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        /* Стили остаются без изменений */
         * {
             margin: 0;
             padding: 0;
@@ -17,12 +16,12 @@
         body {
             font-family: Arial, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            height: 100vh;
-            overflow: hidden;
+            min-height: 100vh;
+            overflow-y: auto;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            padding: 10px;
         }
         
         .game-container {
@@ -49,7 +48,7 @@
         }
         
         .score-value {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: bold;
             background: rgba(255,255,255,0.2);
             padding: 5px 10px;
@@ -148,6 +147,7 @@
             grid-column: 1 / span 3;
             grid-row: 3;
             background: rgba(255, 100, 100, 0.3);
+            font-size: 16px;
         }
         
         .game-buttons {
@@ -187,6 +187,7 @@
             align-items: center;
             justify-content: center;
             z-index: 100;
+            padding: 20px;
         }
         
         .game-over-content {
@@ -195,7 +196,7 @@
             border-radius: 20px;
             text-align: center;
             backdrop-filter: blur(10px);
-            width: 90%;
+            width: 100%;
             max-width: 400px;
         }
         
@@ -238,11 +239,12 @@
 
         .telegram-info {
             background: rgba(255,255,255,0.1);
-            padding: 10px;
+            padding: 8px 12px;
             border-radius: 10px;
-            margin: 10px 0;
+            margin: 5px 0 10px 0;
             text-align: center;
-            font-size: 14px;
+            font-size: 12px;
+            color: #90EE90;
         }
 
         @media (max-width: 400px) {
@@ -257,6 +259,10 @@
             
             .side-panel {
                 width: 80px;
+            }
+            
+            .drop-btn {
+                font-size: 14px;
             }
         }
         
@@ -279,7 +285,7 @@
         </div>
 
         <div class="header">
-            <h1>ТЕТРИС</h1>
+            <h1 style="font-size: 24px;">ТЕТРИС</h1>
             <div class="score-board">
                 <div class="score-item">
                     <div>СЧЕТ</div>
@@ -347,15 +353,14 @@
                     isTelegramWebApp = true;
                     
                     console.log("✅ Запущено в Telegram WebApp");
-                    console.log("User ID:", tg.initDataUnsafe?.user?.id);
-                    console.log("Username:", tg.initDataUnsafe?.user?.username);
+                    console.log("User:", tg.initDataUnsafe?.user);
                     
                     // Показываем информацию о Telegram
                     document.getElementById('telegram-info').style.display = 'block';
                     document.getElementById('telegram-status').innerHTML = '✅ Результаты будут отправлены в рекорды';
                     
-                    // Расширяем WebApp на весь экран
-                    tg.expand();
+                    // НЕ расширяем WebApp на весь экран - убираем эту строку!
+                    // tg.expand();
                     
                     // Меняем текст кнопки
                     document.getElementById('submit-score').innerHTML = '📤 Отправить результат в рекорды';
@@ -735,9 +740,11 @@
                 
                 if (isTelegramWebApp && tg) {
                     const data = {
+                        action: 'save_score',
                         name: playerName,
                         score: score,
                         timestamp: new Date().toISOString(),
+                        user_id: tg.initDataUnsafe?.user?.id,
                         platform: 'telegram_webapp'
                     };
                     
@@ -749,26 +756,16 @@
                     // Показываем сообщение об успехе
                     alert(`✅ Результат отправлен!\n${playerName}: ${score} очков\n\nРезультат будет сохранен в таблице рекордов!`);
                     
-                    // Закрываем WebApp через 2 секунды
-                    setTimeout(() => {
-                        tg.close();
-                    }, 2000);
-                    
                 } else {
                     // Если не в Telegram, показываем сообщение
                     console.log("Не в Telegram WebApp, данные:", {name: playerName, score: score});
-                    alert(`🎉 ${playerName}, ваш результат: ${score} очков!\n\nДля участия в рекордах запустите игру через Telegram бота:\n@${getBotUsername()}`);
+                    alert(`🎉 ${playerName}, ваш результат: ${score} очков!\n\nДля участия в рекордах запустите игру через Telegram бота!`);
                 }
                 
             } catch (error) {
                 console.error('Ошибка отправки:', error);
                 alert('❌ Ошибка отправки результата. Попробуйте еще раз.');
             }
-        }
-
-        // Функция для получения username бота (замените на ваш)
-        function getBotUsername() {
-            return "your_bot_username"; // Замените на username вашего бота
         }
 
         // Обработка нажатий кнопок
@@ -832,29 +829,6 @@
             }
             
             submitScoreToTelegram(playerName, finalScore);
-        });
-
-        // Также поддерживаем клавиатуру для тестирования
-        document.addEventListener('keydown', event => {
-            if (gameOver || paused) return;
-            
-            switch (event.keyCode) {
-                case 37: // Влево
-                    playerMove(-1);
-                    break;
-                case 39: // Вправо
-                    playerMove(1);
-                    break;
-                case 40: // Вниз
-                    playerDrop();
-                    break;
-                case 38: // Вверх
-                    playerRotate(1);
-                    break;
-                case 32: // Пробел
-                    playerDropToBottom();
-                    break;
-            }
         });
 
         // Сброс игры
