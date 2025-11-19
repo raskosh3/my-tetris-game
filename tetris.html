@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Тетрис - ТГ Бот</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            margin: 0;
+            padding: 15px;
+            background: #1a1a2e;
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        .game-container {
+            background: #162447;
+            padding: 15px;
+            border-radius: 10px;
+            max-width: 280px;
+            margin: 0 auto;
+            border: 2px solid #e94560;
+        }
+        canvas {
+            background: #000;
+            border: 2px solid #fff;
+            display: block;
+            margin: 0 auto;
+        }
+        .controls {
+            margin: 10px 0;
+        }
+        button {
+            background: #e94560;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .score {
+            font-size: 18px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h2>🎮 ТЕТРИС</h2>
+
+        <div class="controls">
+            <button onclick="startGame()">СТАРТ</button>
+            <button onclick="pauseGame()">ПАУЗА</button>
+        </div>
+
+        <div class="score">Очки: <span id="score">0</span></div>
+
+        <canvas id="gameBoard" width="240" height="400"></canvas>
+
+        <div style="margin-top: 10px; font-size: 12px; color: #ccc;">
+            Управление: ← → ↓ Пробел
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameBoard');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+
+        let score = 0;
+        let gameActive = false;
+
+        function startGame() {
+            gameActive = true;
+            score = 0;
+            scoreElement.textContent = score;
+
+            // Очищаем canvas
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Рисуем игровое поле
+            ctx.fillStyle = '#0f3460';
+            for (let x = 0; x < canvas.width; x += 30) {
+                for (let y = 0; y < canvas.height; y += 30) {
+                    ctx.strokeStyle = '#1a1a2e';
+                    ctx.strokeRect(x, y, 30, 30);
+                }
+            }
+
+            // Текст игры
+            ctx.fillStyle = '#e94560';
+            ctx.font = 'bold 24px Arial';
+            ctx.fillText('ТЕТРИС', 70, 180);
+
+            ctx.fillStyle = '#4ECCA3';
+            ctx.font = '14px Arial';
+            ctx.fillText('Очки: ' + score, 90, 210);
+
+            ctx.fillStyle = '#fff';
+            ctx.font = '12px Arial';
+            ctx.fillText('Игра готова!', 85, 230);
+        }
+
+        function pauseGame() {
+            if (gameActive) {
+                gameActive = false;
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#fff';
+                ctx.font = '20px Arial';
+                ctx.fillText('ПАУЗА', 90, 200);
+            } else {
+                startGame();
+            }
+        }
+
+        // Обработка клавиш
+        document.addEventListener('keydown', (e) => {
+            if (!gameActive) return;
+
+            if (e.key === 'ArrowLeft') {
+                score += 10;
+                scoreElement.textContent = score;
+            } else if (e.key === 'ArrowRight') {
+                score += 10;
+                scoreElement.textContent = score;
+            } else if (e.key === 'ArrowDown') {
+                score += 5;
+                scoreElement.textContent = score;
+            } else if (e.key === ' ') {
+                score += 20;
+                scoreElement.textContent = score;
+            }
+        });
+
+        // Начальное состояние
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#fff';
+        ctx.font = '16px Arial';
+        ctx.fillText('Нажми СТАРТ', 70, 200);
+    </script>
+</body>
+</html>
