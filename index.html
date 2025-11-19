@@ -6,6 +6,7 @@
     <title>Тетрис для смартфона</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
+        /* Стили остаются без изменений из предыдущей версии */
         * {
             margin: 0;
             padding: 0;
@@ -247,6 +248,33 @@
             color: #90EE90;
         }
 
+        .copy-section {
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            border-radius: 10px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .copy-text {
+            background: rgba(255,255,255,0.9);
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            margin: 10px 0;
+            word-break: break-all;
+        }
+
+        .copy-btn {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+        }
+
         @media (max-width: 400px) {
             .controls {
                 gap: 5px;
@@ -320,6 +348,18 @@
             <div class="action-btn" id="pause-btn">ПАУЗА</div>
             <div class="action-btn" id="restart-btn">ЗАНОВО</div>
         </div>
+
+        <!-- Секция для копирования результата -->
+        <div class="copy-section" id="copy-section">
+            <div style="color: white; text-align: center; margin-bottom: 10px;">
+                📋 Если результат не отправился автоматически:
+            </div>
+            <div class="copy-text" id="result-text"></div>
+            <button class="copy-btn" id="copy-btn">📋 Скопировать результат</button>
+            <div style="color: #ccc; font-size: 12px; text-align: center; margin-top: 10px;">
+                Отправьте скопированный текст боту в чат
+            </div>
+        </div>
     </div>
     
     <div class="game-over" id="game-over">
@@ -358,9 +398,6 @@
                     // Показываем информацию о Telegram
                     document.getElementById('telegram-info').style.display = 'block';
                     document.getElementById('telegram-status').innerHTML = '✅ Результаты будут отправлены в рекорды';
-                    
-                    // НЕ расширяем WebApp на весь экран - убираем эту строку!
-                    // tg.expand();
                     
                     // Меняем текст кнопки
                     document.getElementById('submit-score').innerHTML = '📤 Отправить результат в рекорды';
@@ -445,6 +482,9 @@
         let finalScoreElement = document.getElementById('final-score');
         let playerNameInput = document.getElementById('player-name');
         let submitScoreBtn = document.getElementById('submit-score');
+        let copySection = document.getElementById('copy-section');
+        let resultText = document.getElementById('result-text');
+        let copyBtn = document.getElementById('copy-btn');
 
         // Настройка размера canvas для мобильных устройств
         function setupCanvasSize() {
@@ -756,17 +796,63 @@
                     // Показываем сообщение об успехе
                     alert(`✅ Результат отправлен!\n${playerName}: ${score} очков\n\nРезультат будет сохранен в таблице рекордов!`);
                     
+                    // Закрываем WebApp через 2 секунды
+                    setTimeout(() => {
+                        if (tg && tg.close) {
+                            tg.close();
+                        }
+                    }, 2000);
+                    
                 } else {
-                    // Если не в Telegram, показываем сообщение
-                    console.log("Не в Telegram WebApp, данные:", {name: playerName, score: score});
-                    alert(`🎉 ${playerName}, ваш результат: ${score} очков!\n\nДля участия в рекордах запустите игру через Telegram бота!`);
+                    // Если не в Telegram, показываем секцию для копирования
+                    const resultString = `🏆 РЕЗУЛЬТАТ ТЕТРИС 🏆\nИгрок: ${playerName}\nОчки: ${score}\nОтправьте это сообщение боту для сохранения результата`;
+                    
+                    resultText.textContent = resultString;
+                    copySection.style.display = 'block';
+                    
+                    // Прокручиваем к секции копирования
+                    copySection.scrollIntoView({ behavior: 'smooth' });
+                    
+                    alert(`🎉 ${playerName}, ваш результат: ${score} очков!\n\nСкопируйте результат ниже и отправьте боту.`);
                 }
                 
             } catch (error) {
                 console.error('Ошибка отправки:', error);
-                alert('❌ Ошибка отправки результата. Попробуйте еще раз.');
+                // Показываем секцию для копирования в случае ошибки
+                const resultString = `🏆 РЕЗУЛЬТАТ ТЕТРИС 🏆\nИгрок: ${playerName}\nОчки: ${score}\nОтправьте это сообщение боту для сохранения результата`;
+                
+                resultText.textContent = resultString;
+                copySection.style.display = 'block';
+                copySection.scrollIntoView({ behavior: 'smooth' });
+                
+                alert('❌ Ошибка отправки результата. Скопируйте результат ниже и отправьте боту вручную.');
             }
         }
+
+        // Копирование результата в буфер обмена
+        copyBtn.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(resultText.textContent);
+                copyBtn.textContent = '✅ Скопировано!';
+                setTimeout(() => {
+                    copyBtn.textContent = '📋 Скопировать результат';
+                }, 2000);
+            } catch (err) {
+                console.error('Ошибка копирования:', err);
+                // Альтернативный способ копирования
+                const textArea = document.createElement('textarea');
+                textArea.value = resultText.textContent;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                
+                copyBtn.textContent = '✅ Скопировано!';
+                setTimeout(() => {
+                    copyBtn.textContent = '📋 Скопировать результат';
+                }, 2000);
+            }
+        });
 
         // Обработка нажатий кнопок
         document.getElementById('left-btn').addEventListener('touchstart', (e) => {
@@ -840,6 +926,7 @@
             gameOver = false;
             paused = false;
             gameOverElement.style.display = 'none';
+            copySection.style.display = 'none';
             document.getElementById('pause-btn').textContent = 'ПАУЗА';
             playerNameInput.value = '';
             
