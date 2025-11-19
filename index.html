@@ -193,6 +193,8 @@
             border-radius: 20px;
             text-align: center;
             backdrop-filter: blur(10px);
+            width: 90%;
+            max-width: 400px;
         }
         
         .game-over h2 {
@@ -205,6 +207,33 @@
             margin-bottom: 20px;
         }
         
+        .name-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            border: none;
+            border-radius: 10px;
+            margin: 15px 0;
+            text-align: center;
+            background: rgba(255,255,255,0.9);
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        .submit-btn:active {
+            background: #45a049;
+        }
+
         @media (max-width: 400px) {
             .controls {
                 gap: 5px;
@@ -275,7 +304,15 @@
         <div class="game-over-content">
             <h2>ИГРА ОКОНЧЕНА!</h2>
             <div class="final-score">Ваш счет: <span id="final-score">0</span></div>
-            <div class="action-btn" id="play-again-btn">ИГРАТЬ СНОВА</div>
+            
+            <div id="name-input-section">
+                <input type="text" id="player-name" class="name-input" placeholder="Введите ваше имя" maxlength="20">
+                <button class="submit-btn" id="submit-score">📤 Отправить результат</button>
+            </div>
+            
+            <div style="margin-top: 15px;">
+                <div class="action-btn" id="play-again-btn">🔄 Играть снова</div>
+            </div>
         </div>
     </div>
 
@@ -344,6 +381,8 @@
         let levelElement = document.getElementById('level');
         let gameOverElement = document.getElementById('game-over');
         let finalScoreElement = document.getElementById('final-score');
+        let playerNameInput = document.getElementById('player-name');
+        let submitScoreBtn = document.getElementById('submit-score');
 
         // Настройка размера canvas для мобильных устройств
         function setupCanvasSize() {
@@ -371,6 +410,7 @@
         let level = 1;
         let lines = 0;
         let BLOCK_SIZE_CURRENT = BLOCK_SIZE;
+        let finalScore = 0;
 
         // Текущая и следующая фигура
         let player = {
@@ -571,7 +611,8 @@
             // Проверка на конец игры
             if (collide(board, player)) {
                 gameOver = true;
-                finalScoreElement.textContent = score;
+                finalScore = score;
+                finalScoreElement.textContent = finalScore;
                 gameOverElement.style.display = 'flex';
             }
             
@@ -623,6 +664,22 @@
             requestAnimationFrame(update);
         }
 
+        // Отправка результата в Telegram
+        async function submitScoreToTelegram(playerName, score) {
+            try {
+                // Здесь будет отправка данных в Telegram бот
+                // В реальном приложении нужно отправить POST запрос к вашему боту
+                console.log(`Отправка результата: ${playerName} - ${score} очков`);
+                
+                // Временное решение - показать сообщение
+                alert(`Результат ${playerName}: ${score} очков отправлен! 🎉`);
+                
+            } catch (error) {
+                console.error('Ошибка отправки:', error);
+                alert('Ошибка отправки результата. Попробуйте еще раз.');
+            }
+        }
+
         // Обработка нажатий кнопок
         document.getElementById('left-btn').addEventListener('touchstart', (e) => {
             e.preventDefault();
@@ -670,6 +727,17 @@
             resetGame();
         });
 
+        // Отправка результата
+        submitScoreBtn.addEventListener('click', () => {
+            const playerName = playerNameInput.value.trim();
+            if (!playerName) {
+                alert('Пожалуйста, введите ваше имя!');
+                return;
+            }
+            
+            submitScoreToTelegram(playerName, finalScore);
+        });
+
         // Также поддерживаем клавиатуру для тестирования
         document.addEventListener('keydown', event => {
             if (gameOver || paused) return;
@@ -703,6 +771,7 @@
             paused = false;
             gameOverElement.style.display = 'none';
             document.getElementById('pause-btn').textContent = 'ПАУЗА';
+            playerNameInput.value = '';
             
             // Инициализация фигур
             nextPiece = createPiece();
