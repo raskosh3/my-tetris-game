@@ -248,7 +248,7 @@ async function sendScore() {
         console.error("❌ Ошибка автоматической отправки:", error);
         
         // Показываем вариант для ручной отправки
-        const resultText = `🏆 РЕЗУЛЬТАТ ТЕТРИС 🏆\nИгрок: ${playerName}\nОчки: ${score}\nЛинии: ${lines}\nУровень: ${level}\nТокен: ${gameToken}\nID: ${UID}\nВремя: ${new Date().toLocaleString()}\n\nОтправьте этот текст боту @raskosh3_bot`;
+        const resultText = `🏆 РЕЗУЛЬТАТ ТЕТРИС 🏆\nИгрок: ${playerName}\nОчки: ${score}\nЛинии: ${lines}\nУровень: ${level}\nТокен: ${gameToken}\nID: ${UID}\nВремя: ${new Date().toLocaleString()}\n\nОтправьте этот текст боту `;
         document.getElementById('result-text').textContent = resultText;
         document.getElementById('copy-section').style.display = 'block';
         
@@ -358,6 +358,7 @@ async function sendScore() {
 </script>
 </body>
 </html>
+
 
 
 
