@@ -789,8 +789,8 @@
             playerName, 
             score, 
             isTelegramWebApp,
-            tgReady,
-            tgIsReady: tg ? tg.isReady : 'no tg'
+            tg: !!tg,
+            tgVersion: tg?.version
         });
         
         if (isTelegramWebApp && tg) {
@@ -805,24 +805,35 @@
             
             console.log("Отправка данных в Telegram:", data);
             
-            // Всегда пробуем отправить, даже если isReady = false
+            // ВСЕГДА пробуем отправить, игнорируя isReady
             try {
-                tg.sendData(JSON.stringify(data));
-                console.log("✅ Данные отправлены через sendData");
+                // Гарантированно вызываем ready()
+                tg.ready();
                 
-                // Показываем сообщение об успехе
-                alert(`✅ Результат отправлен!\n${playerName}: ${score} очков\n\nПриложение закроется через 3 секунды...`);
-                
-                // Закрываем WebApp через 3 секунды
+                // Небольшая задержка для гарантии
                 setTimeout(() => {
-                    if (tg && tg.close) {
-                        tg.close();
+                    try {
+                        tg.sendData(JSON.stringify(data));
+                        console.log("✅ Данные отправлены через sendData");
+                        
+                        // Показываем сообщение об успехе
+                        alert(`✅ Результат отправлен!\n${playerName}: ${score} очков\n\nПриложение закроется через 3 секунды...`);
+                        
+                        // Закрываем WebApp через 3 секунды
+                        setTimeout(() => {
+                            if (tg && tg.close) {
+                                tg.close();
+                            }
+                        }, 3000);
+                        
+                    } catch (sendError) {
+                        console.error("❌ Ошибка отправки через sendData:", sendError);
+                        showCopySection(playerName, score);
                     }
-                }, 3000);
+                }, 100);
                 
-            } catch (sendError) {
-                console.error("❌ Ошибка отправки через sendData:", sendError);
-                // Если не получилось отправить, показываем альтернативный вариант
+            } catch (error) {
+                console.error("❌ Общая ошибка отправки:", error);
                 showCopySection(playerName, score);
             }
             
@@ -832,7 +843,7 @@
         }
         
     } catch (error) {
-        console.error('Ошибка отправки:', error);
+        console.error('Общая ошибка:', error);
         showCopySection(playerName, score);
     }
 }
@@ -990,6 +1001,7 @@ function showCopySection(playerName, score) {
     </script>
 </body>
 </html>
+
 
 
 
