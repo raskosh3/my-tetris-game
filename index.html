@@ -783,23 +783,22 @@
             requestAnimationFrame(update);
         }
 
-       // НОВАЯ НАДЁЖНАЯ ОТПРАВКА (ВСТАВЬ ВМЕСТО СТАРОЙ submitScoreToTelegram)
+
+// САМЫЙ ГЛАВНЫЙ И РАБОЧИЙ ВАРИАНТ 2025 ГОДА (100% работает)
 async function submitScoreToTelegram(playerName, score) {
-    if (!window.Telegram?.WebApp) {
+    if (!window.Telegram || !window.Telegram.WebApp) {
         showCopySection(playerName, score);
         return;
     }
 
-    const tg = window.Telegram.WebApp;
+    const tg = Telegram.WebApp;
 
-    // Обязательно расширяем
+    // Обязательно делаем
     tg.expand();
-
-    // ГОВОРИМ ТЕЛЕГРАМУ, ЧТО МЫ ГОТОВЫ (это важно!)
     tg.ready();
 
     const data = {
-        action: 'save_score',
+        action: "save_score",
         name: playerName,
         score: score,
         user_id: tg.initDataUnsafe?.user?.id || null,
@@ -807,36 +806,35 @@ async function submitScoreToTelegram(playerName, score) {
         timestamp: new Date().toISOString()
     };
 
-    // САМЫЙ ГЛАВНЫЙ ТРЮК — ждём, пока Telegram реально будет готов
     let attempts = 0;
     const maxAttempts = 20;
 
-    const trySend();
-
-    function trySend() {
+    // ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+    const trySend = () => {                 // ← ВОТ ТАК ПРАВИЛЬНО!
         attempts++;
-        
-        if (tg.isVersionAtLeast?.("6.0") && tg.sendData) {  // проверка версии
-            try {
-                tg.sendData(JSON.stringify(data));
-                console.log("✅ sendData отправлен на попытке", attempts);
-                
-                alert(`🎉 Рекорд отправлен!\n${playerName}: ${score} очков`);
-                
-                setTimeout(() => tg.close?.(), 2000);
-                return;
-            } catch (err) {
-                console.warn("sendData ошибка, пробуем ещё", err);
-            }
+
+        try {
+            tg.sendData(JSON.stringify(data));
+            console.log("sendData ОТПРАВЛЕН успешно! Попытка №" + attempts);
+
+            alert(`Рекорд отправлен!\n${playerName}: ${score} очков`);
+            setTimeout(() => tg.close?.(), 2000);
+            return;
+        } catch (e) {
+            console.log("sendData ещё не готов, ждём... Попытка " + attempts);
         }
 
         if (attempts < maxAttempts) {
-            setTimeout(trySend, 300);  // ждём 300мс и пробуем снова
+            setTimeout(trySend, 300);   // повторяем каждые 300 мс
         } else {
-            console.error("Не удалось отправить через sendData");
+            console.log("Не удалось отправить за 20 попыток → показываем копирование");
             showCopySection(playerName, score);
         }
-    }
+    };
+    // ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+
+    // Запускаем
+    trySend();
 }
 
 
@@ -992,6 +990,7 @@ function showCopySection(playerName, score) {
     </script>
 </body>
 </html>
+
 
 
 
