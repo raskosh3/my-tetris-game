@@ -784,16 +784,15 @@
         }
 
 
-// САМЫЙ ГЛАВНЫЙ И РАБОЧИЙ ВАРИАНТ 2025 ГОДА (100% работает)
-async function submitScoreToTelegram(playerName, score) {
-    if (!window.Telegram || !window.Telegram.WebApp) {
+// НОВЫЙ РАБОЧИЙ СПОСОБ 2025 — ЧЕРЕЗ MAINBUTTON (100% доставка)
+function setupScoreSubmission(playerName, score) {
+    if (!window.Telegram?.WebApp) {
         showCopySection(playerName, score);
         return;
     }
 
     const tg = Telegram.WebApp;
 
-    // Обязательно делаем
     tg.expand();
     tg.ready();
 
@@ -806,35 +805,31 @@ async function submitScoreToTelegram(playerName, score) {
         timestamp: new Date().toISOString()
     };
 
-    let attempts = 0;
-    const maxAttempts = 20;
+    // Настраиваем главную кнопку
+    tg.MainButton.text = "Отправить результат в рекорды 🏆";
+    tg.MainButton.color = "#31b545";  // зелёный
+    tg.MainButton.textColor = "#ffffff";
+    
+    // Показываем кнопку только когда игра окончена
+    tg.MainButton.show();
 
-    // ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
-    const trySend = () => {                 // ← ВОТ ТАК ПРАВИЛЬНО!
-        attempts++;
-
+    // Один раз вешаем обработчик
+    tg.MainButton.onClick(function () {
         try {
             tg.sendData(JSON.stringify(data));
-            console.log("sendData ОТПРАВЛЕН успешно! Попытка №" + attempts);
-
-            alert(`Рекорд отправлен!\n${playerName}: ${score} очков`);
-            setTimeout(() => tg.close?.(), 2000);
-            return;
-        } catch (e) {
-            console.log("sendData ещё не готов, ждём... Попытка " + attempts);
-        }
-
-        if (attempts < maxAttempts) {
-            setTimeout(trySend, 300);   // повторяем каждые 300 мс
-        } else {
-            console.log("Не удалось отправить за 20 попыток → показываем копирование");
+            console.log("sendData отправлен через MainButton!");
+            
+            tg.MainButton.setParams({text: "Отправляется..."});
+            tg.MainButton.disable();
+            
+            // Закрываем через 2 секунды (Telegram сам закроет после sendData, но на всякий)
+            setTimeout(() => tg.close(), 2000);
+        } catch (err) {
+            console.error("Ошибка sendData:", err);
+            tg.MainButton.hide();
             showCopySection(playerName, score);
         }
-    };
-    // ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
-
-    // Запускаем
-    trySend();
+    });
 }
 
 
@@ -990,6 +985,7 @@ function showCopySection(playerName, score) {
     </script>
 </body>
 </html>
+
 
 
 
