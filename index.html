@@ -3,67 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ТЕСТ СВЯЗИ WEBAPP → БОТ</title>
+    <title>Тетрис — РАБОЧАЯ ОТПРАВКА 2025</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #000;
-            color: white;
-            text-align: center;
-            padding: 50px 20px;
-            margin: 0;
-        }
+        body { font-family: Arial; background: #000; color: white; text-align: center; padding: 40px; }
         h1 { font-size: 28px; margin-bottom: 30px; }
-        .info { font-size: 18px; margin: 20px 0; background: #333; padding: 15px; border-radius: 10px; }
-        .btn {
-            margin-top: 50px;
-            padding: 20px;
-            background: #ff3b30;
-            color: white;
-            font-size: 24px;
-            border-radius: 15px;
-            display: inline-block;
-        }
+        input { padding: 15px; font-size: 18px; width: 80%; margin: 10px; border-radius: 10px; }
+        button { padding: 18px; font-size: 20px; background: #31b545; color: white; border: none; border-radius: 15px; width: 80%; margin-top: 20px; }
     </style>
 </head>
 <body>
-    <h1>ТЕСТ СВЯЗИ</h1>
-    <div class="info">
-        Если видишь эту страницу — WebApp открылся<br><br>
-        Нажми красную кнопку ниже<br>
-        Если в логах бота появится "test123" — ВСЁ РАБОТАЕТ
-    </div>
+    <h1>ТЕТРИС — ТЕСТ ОТПРАВКИ</h1>
+    <p>Введи имя и очки — отправим напрямую в бот</p>
+    <input type="text" id="name" placeholder="Твоё имя" value="Тестовый игрок">
+    <input type="number" id="score" placeholder="Очки" value="99999">
+    <button id="send">ОТПРАВИТЬ В БОТ (100% ДОСТАВКА)</button>
 
     <script>
-        // Ждём полной загрузки Telegram WebApp
-        window.Telegram.WebApp.ready();
-        window.Telegram.WebApp.expand();
-
-        // Сразу показываем кнопку
         const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
 
-        tg.MainButton.text = "ОТПРАВИТЬ ТЕСТ В БОТ";
-        tg.MainButton.color = "#ff3b30";
-        tg.MainButton.textColor = "#ffffff";
-        tg.MainButton.show();
+        // ТВОЙ ТОКЕН И ЧАТ ID (ОТ ТЕБЯ)
+        const BOT_TOKEN = "7774913864:AAFLyQP6kuVmPcGYKgHOE9YpWJ2G7tGq3JU";
+        const USER_ID = tg.initDataUnsafe?.user?.id || "NO_ID";
 
-        tg.MainButton.onClick(() => {
-            // Отправляем простую строку
-            tg.sendData("test123");
-            
-            // Меняем кнопку
-            tg.MainButton.setText("ОТПРАВЛЕНО! ЖДИ ЛОГИ");
-            tg.MainButton.disable();
-            
-            // Дополнительно пишем в консоль (F12 → Console)
-            console.log("sendData отправлен: test123");
-        });
+        document.getElementById("send").onclick = async () => {
+            const name = document.getElementById("name").value.trim() || "Аноним";
+            const score = document.getElementById("score").value || "0";
 
-        // Выводим инфу в консоль для проверки
-        console.log("WebApp запущен");
-        console.log("User:", tg.initDataUnsafe.user);
-        console.log("Version:", tg.version);
+            const text = `🎮 НОВЫЙ РЕКОРД ОТ WEBAPP\n\n👤 Игрок: ${name}\n🎯 Очки: ${score}\n🆔 ID: ${USER_ID}`;
+
+            const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${USER_ID}&text=${encodeURIComponent(text)}&parse_mode=Markdown`;
+
+            try {
+                const res = await fetch(url);
+                const json = await res.json();
+                if (json.ok) {
+                    alert("УСПЕШНО ОТПРАВЛЕНО В БОТ!");
+                } else {
+                    alert("Ошибка: " + JSON.stringify(json));
+                }
+            } catch (e) {
+                alert("Сеть упала: " + e.message);
+            }
+        };
+
+        // Автозаполнение имени
+        if (tg.initDataUnsafe?.user) {
+            document.getElementById("name").value = tg.initDataUnsafe.user.username 
+                ? `@${tg.initDataUnsafe.user.username}` 
+                : tg.initDataUnsafe.user.first_name;
+        }
     </script>
 </body>
 </html>
