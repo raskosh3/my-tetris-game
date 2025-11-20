@@ -177,67 +177,68 @@
 
     // ОБНОВЛЕННАЯ ФУНКЦИЯ ОТПРАВКИ
     async function sendScore() {
-        const playerName = (document.getElementById('name').value || "Аноним").trim().slice(0, 18);
-        const scoreData = {
-            action: 'save_score',
-            name: playerName,
-            score: score,
-            user_id: UID,
-            timestamp: new Date().toISOString(),
-            platform: 'tetris_webapp'
-        };
+    const playerName = (document.getElementById('name').value || "Аноним").trim().slice(0, 18);
+    
+    console.log("📤 Отправка результата:", { playerName, score });
 
-        console.log("📤 Отправка результата:", scoreData);
+    try {
+        // 1. Сохраняем в таблицу рекордов (отправляем боту)
+        const scoreMessage = `🏆 РЕЗУЛЬТАТ ТЕТРИС 🏆\n\nИгрок: ${playerName}\nОчки: ${score}\nВремя: ${new Date().toLocaleString()}\nID: ${UID}`;
+        
+        await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
+            method: "POST", 
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                chat_id: UID, // Отправляем самому себе
+                text: scoreMessage,
+                parse_mode: "Markdown"
+            })
+        });
+        console.log("✅ Результат отправлен боту для сохранения");
 
-        try {
-            // Пробуем отправить через Telegram WebApp
-            if (tg) {
-                tg.sendData(JSON.stringify(scoreData));
-                console.log("✅ Данные отправлены через WebApp");
-                
-                tg.MainButton.setText("✅ Отправлено!");
-                setTimeout(() => {
-                    if (tg.close) tg.close();
-                }, 1500);
-                return;
-            }
-        } catch (webappError) {
-            console.log("❌ WebApp отправка не удалась:", webappError);
-        }
+        // 2. Публикуем в канал
+        const channelMessage = `🏆 НОВЫЙ РЕКОРД ТЕТРИС! 🏆
 
-        // Если WebApp не сработал, пробуем отправить прямо в канал
-        try {
-            const messageText = `🏆 НОВЫЙ РЕКОРД ТЕТРИС! 🏆\n\n👤 Игрок: ${playerName}\n🎯 Очки: ${score}\n📅 Время: ${new Date().toLocaleString()}\n\n#тетрис #рекорд`;
+👤 Игрок: <b>${playerName}</b>
+🎯 Очки: <b>${score}</b>
+📅 Время: ${new Date().toLocaleString()}
+
+#тетрис #рекорд`;
+
+        const response = await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
+            method: "POST", 
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                chat_id: CHANNEL_ID,
+                text: channelMessage,
+                parse_mode: "HTML"
+            })
+        });
+
+        if (response.ok) {
+            console.log("✅ Результат опубликован в канале!");
+            alert(`✅ Результат сохранен!\n${playerName}: ${score} очков\n\nЗагляни в канал @raskosh3!`);
             
-            const response = await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
-                method: "POST", 
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({
-                    chat_id: CHANNEL_ID,
-                    text: messageText,
-                    parse_mode: "HTML"
-                })
-            });
-
-            if (response.ok) {
-                console.log("✅ Результат отправлен в канал!");
-                alert(`✅ Результат отправлен!\n${playerName}: ${score} очков`);
-                
-                if (tg?.MainButton) {
-                    tg.MainButton.setText("✅ Отправлено!");
-                    setTimeout(() => {
-                        if (tg.close) tg.close();
-                    }, 1500);
-                }
-            } else {
-                throw new Error("Ошибка HTTP: " + response.status);
+            if (tg?.MainButton) {
+                tg.MainButton.setText("✅ Готово!");
+                setTimeout(() => tg.close?.(), 2000);
             }
-        } catch (fetchError) {
-            console.error("❌ Ошибка отправки:", fetchError);
-            // Показываем секцию для копирования
-            showCopySection(playerName, score);
+        } else {
+            const errorData = await response.json();
+            throw new Error(errorData.description || "Ошибка HTTP: " + response.status);
         }
+
+    } catch (error) {
+        console.error("❌ Ошибка:", error);
+        
+        // Показываем вариант для ручной отправки
+        const resultText = `🏆 РЕЗУЛЬТАТ ТЕТРИС 🏆\nИгрок: ${playerName}\nОчки: ${score}\nВремя: ${new Date().toLocaleString()}\n\nОтправьте этот текст боту @raskosh3_bot`;
+        document.getElementById('result-text').textContent = resultText;
+        document.getElementById('copy-section').style.display = 'block';
+        
+        alert("📋 Скопируйте результат ниже и отправьте боту вручную");
     }
+}
 
     // Функция показа секции копирования
     function showCopySection(playerName, score) {
@@ -340,3 +341,4 @@
 </script>
 </body>
 </html>
+
