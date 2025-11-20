@@ -85,7 +85,13 @@
             ctx.strokeStyle="#222";ctx.strokeRect(x*S,y*S,S,S);
         }
     }
-    function drawP(p){p.s.forEach((r,y)=>r.forEach((v,x)=>{if(v){ctx.fillStyle=p.c;ctx.fillRect((p.x+x)*S,(p.y+y)*S,S,S);ctx.strokeStyle="#222";ctx.strokeRect((p.x+x)*S,(p.y+y)*S,S,S);}}));}
+    function drawP(p){
+        p.s.forEach((r,y)=>r.forEach((v,x)=>{if(v){
+            ctx.fillStyle=p.c;
+            ctx.fillRect((p.x+x)*S,(p.y+y)*S,S,S);
+            ctx.strokeStyle="#222";ctx.strokeRect((p.x+x)*S,(p.y+y)*S,S,S);  // ← ИСПРАВИЛ ЗДЕСЬ
+        }}));
+    }
     function drawNext(){
         nctx.fillStyle="#000";nctx.fillRect(0,0,76,76);
         np.s.forEach((r,y)=>r.forEach((v,x)=>v&&nctx.fillStyle=np.c,nctx.fillRect(x*19+10,y*19+10,18,18)));
